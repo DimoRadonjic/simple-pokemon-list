@@ -2,6 +2,8 @@ let loading = true;
 let data = null;
 let pokemons = [];
 let pokemonData = null;
+let currentPage = 1;
+let itemsPerPage = 20;
 
 const baseURLSpecies = "https://pokeapi.co/api/v2/pokemon-species/";
 const baseURL = "https://pokeapi.co/api/v2/pokemon/";
@@ -11,6 +13,10 @@ const imgURL =
   "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/";
 
 const pokemonList = document.getElementById("pokemon-list");
+const prevBtn = document.getElementById("prev-btn");
+const nextBtn = document.getElementById("next-btn");
+const pageInfo = document.getElementById("page-info");
+const pagination = document.getElementById("pagination");
 
 const noDataHTML = "<p>No data available.</p>";
 
@@ -136,7 +142,7 @@ const pokemonDetailCardHTML = (pokemon) => `
     
 
       </div>
-  <button class="button" onclick="fetchData()">Back to List</button>
+  <button class="button" onclick="fetchData(${1},${itemsPerPage})">Back to List</button>
 
     </div>
 `;
@@ -173,11 +179,36 @@ const renderPokemon = (pokemon = null) => {
   pokemonList.innerHTML = `<li>${pokemonDetailCardHTML(pokemon)}</li>`;
 };
 
-async function fetchData() {
+async function fetchData(page = 1, limit = 20) {
   loading = true;
 
+  pagination.style.display = "block";
+
+  console.log("fetchData", page, limit);
+
+  pageInfo.textContent = `Page ${page}`;
+  prevBtn.disabled = page === 1;
+  nextBtn.disabled = page === Math.ceil(1203 / limit);
+
+  prevBtn.onclick = () => {
+    if (currentPage > 1) {
+      currentPage--;
+      fetchData(currentPage, itemsPerPage);
+    }
+  };
+
+  nextBtn.onclick = () => {
+    if (currentPage < Math.ceil(1203 / limit)) {
+      currentPage++;
+      fetchData(currentPage, itemsPerPage);
+    }
+  };
+  renderPokemons();
+
   try {
-    const response = await fetch(baseURLSpecies);
+    const response = await fetch(
+      baseURLSpecies + `?offset=${(page - 1) * limit}&limit=${limit}`
+    );
     if (!response.ok) throw new Error("Network response was not ok");
     data = await response.json();
     pokemons = data.results;
@@ -211,7 +242,11 @@ async function evoChain(pokemon) {
 async function fetchPokemon(url, name) {
   loading = true;
 
+  pagination.style.display = "none";
+
   const id = url.split("/").filter(Boolean).pop();
+
+  renderPokemon(pokemonData);
 
   try {
     const response2 = await fetch(baseURL + name);
@@ -239,4 +274,7 @@ async function fetchPokemon(url, name) {
   }
 }
 
-document.addEventListener("DOMContentLoaded", fetchData);
+document.addEventListener(
+  "DOMContentLoaded",
+  fetchData(currentPage, itemsPerPage)
+);
