@@ -26,8 +26,6 @@ const evolutionChainHTML = (chain) => {
   let current = chain;
   const items = [];
 
-  console.log("current", current);
-
   while (current) {
     const id = current.species.url.split("/").filter(Boolean).pop();
     items.push(`
@@ -184,8 +182,6 @@ async function fetchData(page = 1, limit = 20) {
 
   pagination.style.display = "block";
 
-  console.log("fetchData", page, limit);
-
   pageInfo.textContent = `Page ${page}`;
   prevBtn.disabled = page === 1;
   nextBtn.disabled = page === Math.ceil(1203 / limit);
@@ -213,7 +209,6 @@ async function fetchData(page = 1, limit = 20) {
     data = await response.json();
     pokemons = data.results;
 
-    console.log(data.results);
     loading = false;
 
     renderPokemons();
@@ -267,8 +262,6 @@ async function fetchPokemon(url, name) {
 
     loading = false;
     renderPokemon(pokemonData);
-
-    console.log("pokemonData", pokemonData);
   } catch (error) {
     console.error("Fetch error:", error);
   }
