@@ -16,11 +16,11 @@ li {
   border-radius: 8px;
   padding: 10px;
   text-align: center;
-  width: 150px;
+  width: fit-content;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-button {
+.button {
   background-color: #4caf50;
   color: white;
   border: none;
@@ -28,4 +28,82 @@ button {
   border-radius: 5px;
   cursor: pointer;
   transition: background-color 0.3s ease;
+}
+
+.button:hover {
+  background-color: #45a049;
+  cursor: pointer;
+}
+
+.evo-button {
+  background: none;
+  color: black;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+}
+
+.evo-button:hover {
+  text-decoration: underline;
+}
+
+h2,
+h3 {
+  text-align: center;
+  text-transform: capitalize;
+}
+ul {
+  list-style: none;
+}
+
+.pokemon-info {
+  display: flex;
+  width: 100%;
+}
+
+.main-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.pokemon-img-detail {
+  width: 240px;
+  object-fit: contain;
+}
+
+.types-list {
+  padding: 0;
+  margin: 10px 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.type {
+  border: none;
+  background-color: inherit;
+  box-shadow: none;
+  text-align: start;
+}
+
+.abilities-list {
+  display: flex;
+  flex-wrap: wrap;
+  width: 100%;
+  gap: 15px;
+}
+
+.stats-list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  width: 100%;
+  gap: 5px;
+}
+
+.evolution-list {
+  display: flex;
+  place-content: center;
+  place-items: center;
+  gap: 10px;
 }

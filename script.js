@@ -3,7 +3,10 @@ let data = null;
 let pokemons = [];
 let pokemonData = null;
 
+const baseURLSpecies = "https://pokeapi.co/api/v2/pokemon-species/";
 const baseURL = "https://pokeapi.co/api/v2/pokemon/";
+
+const evoURL = "https://pokeapi.co/api/v2/evolution-chain/";
 const imgURL =
   "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/";
 
@@ -13,26 +16,127 @@ const noDataHTML = "<p>No data available.</p>";
 
 const loadingHTML = "<p>Loading...</p>";
 
+const evolutionChainHTML = (chain) => {
+  let current = chain;
+  const items = [];
+
+  console.log("current", current);
+
+  while (current) {
+    const id = current.species.url.split("/").filter(Boolean).pop();
+    items.push(`
+      <li class="evolution-item" >
+      <button class="evo-button" onclick="fetchPokemon('${
+        current.species.url
+      }', '${current.species.name}')">
+        <img class="pokemon-img" src="${imgURL + id}.png" alt="${
+      current.species.name
+    }" />
+        <p>${current.species.name}</p>
+        </button>
+      </li>
+    `);
+
+    if (current.evolves_to && current.evolves_to.length > 0) {
+      current = current.evolves_to[0];
+    } else {
+      break;
+    }
+  }
+
+  return `
+    <div class="evolution-chain">
+      <h3>Evolution Chain</h3>
+      <ul class="evolution-list">
+        ${items.join("=>")} 
+      </ul>
+    </div>
+  `;
+};
+
 const pokemonCardHTML = (pokemon) => `
   <div class="pokemon-card">
   <img class="pokemon-img" src="${
     imgURL + pokemon.url.split("/").filter(Boolean).pop()
   }.png" alt="${pokemon.name}" />
     <h3>${pokemon.name}</h3>
-<button onclick="fetchPokemon('${pokemon.name}')">View Details</button>
+  <button class="button" onclick="fetchPokemon('${pokemon.url}', '${
+  pokemon.name
+}')">View Details</button>
   </div>
 `;
 
 const pokemonDetailCardHTML = (pokemon) => `
     <div class="pokemon-detail-card">
-    <img class="pokemon-img" src="${imgURL + pokemon.id}.png" alt="${
+    <div class="pokemon-info">
+        <img class="pokemon-img-detail" src="${imgURL + pokemon.id}.png" alt="${
   pokemon.name
 }" />
-      <h2>${pokemon.name} (ID: ${pokemon.id})</h2>
+      <div class="main-info">
+      <h2>${pokemon.name} </h2>
       <p>Height: ${pokemon.height}</p>
       <p>Weight: ${pokemon.weight}</p>
       <p>Base Experience: ${pokemon.base_experience}</p>
-<button onclick="fetchData()">Back to List</button>
+      <p>Habitat: ${pokemon.habitat ? pokemon.habitat.name : "Unknown"}</p>
+      <p>Color: ${pokemon.color ? pokemon.color.name : "Unknown"}</p>
+      <p>Shape: ${pokemon.shape ? pokemon.shape.name : "Unknown"}</p>
+      <p>Growth Rate: ${
+        pokemon.growth_rate ? pokemon.growth_rate.name : "Unknown"
+      }</p>
+      <p>Egg Groups: ${
+        pokemon.egg_groups
+          ? pokemon.egg_groups.map((group) => group.name).join(", ")
+          : "Unknown"
+      }</p></div>
+      <div>
+        <div>
+        <h3>Abilities</h3>
+        <ul class="abilities-list">
+          ${pokemon.abilities
+            .map(
+              (ability) =>
+                `<li>${ability.ability.name} ${
+                  ability.is_hidden ? "(Hidden)" : ""
+                }</li>`
+            )
+            .join("")}
+        </ul>
+      </div>
+      <div>
+        <h3>Types</h3>
+        <ul class="types-list">
+          ${pokemon.types
+            .map((type) => `<li class="">${type.type.name}</li>`)
+            .join("")}
+        </ul>
+      </div>
+      <div>
+        <h3>Stats</h3>
+        <ul class="stats-list">
+          ${pokemon.stats
+            .map(
+              (stat) =>
+                `<li>${stat.stat.name}: ${stat.base_stat} (Effort: ${stat.effort})</li>`
+            )
+            .join("")}
+        </ul>
+      </div>
+      </div>
+
+      <div>
+      <div>
+        ${
+          pokemon.evolution_chain
+            ? evolutionChainHTML(pokemon.evolution_chain.chain)
+            : "<p>No evolution data available.</p>"
+        } 
+
+    </div>
+    </div>
+    
+
+      </div>
+  <button class="button" onclick="fetchData()">Back to List</button>
 
     </div>
 `;
@@ -73,7 +177,7 @@ async function fetchData() {
   loading = true;
 
   try {
-    const response = await fetch(baseURL);
+    const response = await fetch(baseURLSpecies);
     if (!response.ok) throw new Error("Network response was not ok");
     data = await response.json();
     pokemons = data.results;
@@ -88,18 +192,48 @@ async function fetchData() {
   }
 }
 
-async function fetchPokemon(name) {
+async function evoChain(pokemon) {
   loading = true;
-  console.log("name", name);
 
   try {
-    const response = await fetch(baseURL + name);
+    const response = await fetch(growthRateURL + pokemon.id);
     if (!response.ok) throw new Error("Network response was not ok");
-    const pokemonData = await response.json();
+    const evoChain = await response.json();
+    loading = false;
+    pokemon.evoChain = evoChain;
+    console.log("evoChain", evoChain);
+    return pokemon;
+  } catch (error) {
+    console.error("Fetch error:", error);
+  }
+}
+
+async function fetchPokemon(url, name) {
+  loading = true;
+
+  const id = url.split("/").filter(Boolean).pop();
+
+  try {
+    const response2 = await fetch(baseURL + name);
+
+    const data2 = await response2.json();
+
+    const response = await fetch(baseURLSpecies + data2.id);
+
+    const data = await response.json();
+
+    const response3 = await fetch(data.evolution_chain.url);
+
+    const data3 = await response3.json();
+
+    pokemonData = { ...data, ...data2, evolution_chain: data3 };
+
+    if (!response.ok) throw new Error("Network response was not ok");
+
     loading = false;
     renderPokemon(pokemonData);
 
-    console.log(pokemonData);
+    console.log("pokemonData", pokemonData);
   } catch (error) {
     console.error("Fetch error:", error);
   }
